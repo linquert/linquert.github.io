@@ -49,7 +49,7 @@
 
         section, header { grid-column: 2; }
 
-        h1, h2, h3 {
+        h1, h2, h3, h4 {
             font-family: var(--font-head);
             margin-top: 2rem;
             font-weight: 600;
@@ -57,6 +57,7 @@
 
         h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
         h2 { font-size: 1.6rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; }
+        h3 { font-size: 1.3rem; margin-bottom: 0.5rem; color: #444; }
         
         p { margin-bottom: 1.5rem; }
 
@@ -107,6 +108,25 @@
         .type { color: #006600; }
         .str { color: #aa1111; }
         .com { color: #888; font-style: italic; }
+
+        /* --- Example Box Styles --- */
+        .example-box {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .example-box pre {
+            background: transparent;
+            border: none;
+            padding: 10px 0 0 0;
+            margin: 0;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+        }
 
         /* --- Visualizer Styles --- */
         .viz-box {
@@ -254,13 +274,43 @@
 
     <section>
         <h2>The Question</h2>
-        <p>
-            You are given an integer array <code>nums</code>. A partition splits the array at index <code>i</code> into a Left Subarray and a Right Subarray.
-        </p>
-        <p>
-            We need to count how many partitions exist such that:
-            $$ (Sum_{Left} - Sum_{Right}) \text{ is Even} $$
-        </p>
+        <div style="background: #f9f9f9; padding: 20px; border-left: 4px solid var(--secondary-color); border-radius: 4px; margin-bottom: 2rem;">
+            <p style="margin-top: 0;">You are given an integer array <code>nums</code> of length <code>n</code>.</p>
+            <p>A <strong>partition</strong> is defined as an index <code>i</code> where <code>0 <= i < n - 1</code>, splitting the array into two non-empty subarrays such that:</p>
+            <ul>
+                <li><strong>Left subarray</strong> contains indices <code>[0, i]</code>.</li>
+                <li><strong>Right subarray</strong> contains indices <code>[i + 1, n - 1]</code>.</li>
+            </ul>
+            <p style="margin-bottom: 0;">Return the number of partitions where the difference between the sum of the left and right subarrays is <strong>even</strong>.</p>
+        </div>
+
+        <h3>Examples</h3>
+        
+        <div class="example-box">
+            <strong style="color: var(--secondary-color);">Example 1:</strong>
+            <pre>Input: nums = [10,10,3,7,6]
+Output: 4
+Explanation:
+The 4 partitions are:
+[10], [10, 3, 7, 6] -> Diff: 10 - 26 = -16 (Even)
+[10, 10], [3, 7, 6] -> Diff: 20 - 16 = 4 (Even)
+[10, 10, 3], [7, 6] -> Diff: 23 - 13 = 10 (Even)
+[10, 10, 3, 7], [6] -> Diff: 30 - 6 = 24 (Even)</pre>
+        </div>
+
+        <div class="example-box">
+            <strong style="color: var(--secondary-color);">Example 2:</strong>
+            <pre>Input: nums = [1,2,2]
+Output: 0
+Explanation: No partition results in an even sum difference.</pre>
+        </div>
+
+        <div class="example-box">
+            <strong style="color: var(--secondary-color);">Example 3:</strong>
+            <pre>Input: nums = [2,4,6,8]
+Output: 3
+Explanation: All partitions result in an even sum difference.</pre>
+        </div>
     </section>
 
     <!-- VISUALIZER SECTION -->
