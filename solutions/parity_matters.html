@@ -392,17 +392,6 @@ Explanation: All partitions result in an even sum difference.</pre>
                 An Even number minus an Even number is always Even.
             </div>
         </div>
-
-        <p>Try the combinations above. You will discover the fundamental rules of modular arithmetic:</p>
-        <ul>
-            <li>\(Even - Even = Even\)</li>
-            <li>\(Odd - Odd = Even\)</li>
-            <li>\(Even - Odd = Odd\)</li>
-            <li>\(Odd - Even = Odd\)</li>
-        </ul>
-        <p>
-            Notice something? The result is <strong>Even</strong> if and only if the two numbers have the <strong>same parity</strong>.
-        </p>
     </section>
 
     <section>
@@ -438,6 +427,84 @@ Explanation: All partitions result in an even sum difference.</pre>
             <li>If \(S_T\) is <strong>Even</strong>: We have \(Even - Even\). Result is <strong>Even</strong>.</li>
             <li>If \(S_T\) is <strong>Odd</strong>: We have \(Even - Odd\). Result is <strong>Odd</strong>.</li>
         </ul>
+    </section>
+
+    <!-- NEW SECTION: Hint / Intuition -->
+    <section>
+        <h2>Hint: The "Gap Change" Intuition</h2>
+        <p>
+            Why does the Total Sum tell us everything? Let's look at what happens physically when we move the partition line.
+        </p>
+        <p>
+            Imagine the partition as a transfer. When we move the line to the right, we take a number $x$ from the Right side and give it to the Left side.
+        </p>
+        <div style="background: #fff; border: 2px solid #333; border-radius: 8px; padding: 20px; margin: 2rem 0;">
+            <h3 style="text-align:center; margin-top:0;">The Transfer Visualizer</h3>
+            
+            <!-- Controls -->
+            <div style="text-align: center; margin-bottom: 20px;">
+                <p>Array: <code>[10, 10, 3, 7, 6]</code></p>
+                <button id="btn-transfer" onclick="transferNext()" style="background-color: var(--secondary-color);">
+                    Transfer Next Number
+                </button>
+                <button onclick="resetTransfer()" style="background-color: #666;">Reset</button>
+            </div>
+
+            <!-- The Buckets -->
+            <div style="display: flex; justify-content: space-around; align-items: flex-start; margin-bottom: 20px;">
+                <!-- Left Bucket -->
+                <div style="width: 45%; text-align: center;">
+                    <div style="font-weight: bold; color: #2E86C1; margin-bottom: 5px;">LEFT SUM</div>
+                    <div id="box-left" style="border: 2px solid #2E86C1; background: #ebf5fb; padding: 20px; font-size: 1.5rem; border-radius: 8px; min-height: 50px;">
+                        10
+                    </div>
+                    <div id="anim-left" style="height: 20px; color: green; font-weight: bold; font-size: 0.9rem;"></div>
+                </div>
+
+                <!-- Right Bucket -->
+                <div style="width: 45%; text-align: center;">
+                    <div style="font-weight: bold; color: #C0392B; margin-bottom: 5px;">RIGHT SUM</div>
+                    <div id="box-right" style="border: 2px solid #C0392B; background: #fdedec; padding: 20px; font-size: 1.5rem; border-radius: 8px; min-height: 50px;">
+                        26
+                    </div>
+                    <div id="anim-right" style="height: 20px; color: red; font-weight: bold; font-size: 0.9rem;"></div>
+                </div>
+            </div>
+
+            <!-- The Math Calculation -->
+            <div style="background: #f4f4f4; padding: 15px; border-radius: 6px; font-family: var(--font-mono);">
+                <div style="margin-bottom: 10px; border-bottom: 1px solid #ccc; padding-bottom: 10px;">
+                    <strong>Current Calculation:</strong><br>
+                    <span id="calc-sums">10 - 26</span> = <span id="calc-diff">-16</span> 
+                    (<span id="calc-parity" style="font-weight: bold; color: var(--accent-color);">EVEN</span>)
+                </div>
+                
+                <div id="explanation-text" style="color: #444; font-size: 0.95rem;">
+                    Start state. Left has 10, Right has 26.
+                </div>
+            </div>
+        </div>
+
+        <h3>Why this guarantees the solution:</h3>
+        <p>
+            Did you see the pattern?
+        </p>
+        <ol>
+            <li>Left Side gains  +x .</li>
+            <li>Right Side loses -x.</li>
+            <li>The <strong>Gap</strong> changes by exactly 2x.</li>
+        </ol>
+        <p>
+            $$ \text{NewDiff} = \text{OldDiff} + 2x $$
+        </p>
+        <p>
+            Since $2x$ is <strong>always an even number</strong>, adding it can never change the parity.
+            <br>
+            If the difference starts Odd, it stays Odd forever. If it starts Even, it stays Even forever.
+        </p>
+        <p>
+            Therefore, we only need to look at the global property (Total Sum) to know the answer for <em>all</em> partitions.
+        </p>
     </section>
 
     <section>
@@ -484,7 +551,7 @@ Explanation: All partitions result in an even sum difference.</pre>
 
 <!-- JAVASCRIPT FOR INTERACTIVITY -->
 <script>
-    // --- Visualizer Logic ---
+    // --- 1. Main Visualizer Logic ---
     const vizNums = [10, 10, 3, 7, 6];
     let partitionIndex = -1; // -1 means not started
     let vizCount = 0;
@@ -493,13 +560,11 @@ Explanation: All partitions result in an even sum difference.</pre>
         const container = document.getElementById('viz-container');
         container.innerHTML = '';
         
-        // Render array items
         vizNums.forEach((num, idx) => {
             const div = document.createElement('div');
             div.className = 'arr-item';
             div.innerText = num;
             
-            // Add index label
             const label = document.createElement('div');
             label.className = 'idx-label';
             label.innerText = idx;
@@ -511,7 +576,6 @@ Explanation: All partitions result in an even sum difference.</pre>
             }
             container.appendChild(div);
 
-            // Add partition line visually
             if (partitionIndex !== -1 && idx === partitionIndex) {
                 const line = document.createElement('div');
                 line.className = 'partition-line';
@@ -530,7 +594,6 @@ Explanation: All partitions result in an even sum difference.</pre>
         partitionIndex++;
         renderViz();
 
-        // Calculate Sums
         let leftSum = 0;
         let rightSum = 0;
         for(let i=0; i<vizNums.length; i++) {
@@ -544,7 +607,6 @@ Explanation: All partitions result in an even sum difference.</pre>
         if (isEven) vizCount++;
         document.getElementById('count-display').innerText = vizCount;
 
-        // Log
         const logHtml = `
             <div>Partition at index <strong>${partitionIndex}</strong></div>
             <div>Left Sum: <strong>${leftSum}</strong> | Right Sum: <strong>${rightSum}</strong></div>
@@ -565,11 +627,10 @@ Explanation: All partitions result in an even sum difference.</pre>
         renderViz();
     }
 
-    // Initialize Viz
     renderViz();
 
-    // --- Parity Playground Logic ---
-    let p1 = 0; // 0 = even, 1 = odd
+    // --- 2. Parity Playground Logic ---
+    let p1 = 0; 
     let p2 = 0;
 
     function toggleParity(boxNum) {
@@ -595,10 +656,6 @@ Explanation: All partitions result in an even sum difference.</pre>
     }
 
     function calculateParityResult() {
-        // Even(0) - Even(0) = 0 (Even)
-        // Even(0) - Odd(1) = -1 (Odd)
-        // Odd(1) - Even(0) = 1 (Odd)
-        // Odd(1) - Odd(1) = 0 (Even)
         const res = Math.abs(p1 - p2) % 2;
         updateParityBox('p-result', res);
         
@@ -609,6 +666,86 @@ Explanation: All partitions result in an even sum difference.</pre>
             "1-1": "Odd - Odd = Even. (e.g., 11 - 3 = 8)"
         };
         document.getElementById('parity-explanation').innerText = explanations[`${p1}-${p2}`];
+    }
+
+    // --- 3. Transfer Visualizer Logic (5 Elements) ---
+    // nums = [10, 10, 3, 7, 6]
+    // Step 0: L[10], R[10,3,7,6](26)
+    // Step 1: Move 10. L[20], R[16]
+    // Step 2: Move 3. L[23], R[13]
+    // Step 3: Move 7. L[30], R[6]
+    
+    let tStep = 0;
+    const tData = [
+        { 
+            left: 10, right: 26, 
+            moved: null, type: null,
+            desc: "Initial State (Index 0). Diff is -16 (EVEN)." 
+        },
+        { 
+            left: 20, right: 16, 
+            moved: 10, type: "EVEN",
+            desc: "Moved 10 (EVEN). Left +10, Right -10. Gap changes by +20. Still EVEN." 
+        },
+        { 
+            left: 23, right: 13, 
+            moved: 3, type: "ODD",
+            desc: "Moved 3 (ODD). Left +3, Right -3. Gap changes by +6. Still EVEN." 
+        },
+        { 
+            left: 30, right: 6, 
+            moved: 7, type: "ODD",
+            desc: "Moved 7 (ODD). Left +7, Right -7. Gap changes by +14. Still EVEN." 
+        }
+    ];
+
+    function transferNext() {
+        if (tStep >= 3) return;
+        tStep++;
+        updateTransferUI();
+    }
+
+    function resetTransfer() {
+        tStep = 0;
+        updateTransferUI();
+    }
+
+    function updateTransferUI() {
+        const data = tData[tStep];
+        
+        document.getElementById('box-left').innerText = data.left;
+        document.getElementById('box-right').innerText = data.right;
+        
+        const diff = data.left - data.right;
+        const parity = (Math.abs(diff) % 2 === 0) ? "EVEN" : "ODD";
+        
+        document.getElementById('calc-sums').innerText = `${data.left} - ${data.right}`;
+        document.getElementById('calc-diff').innerText = diff;
+        
+        const parityEl = document.getElementById('calc-parity');
+        parityEl.innerText = parity;
+        parityEl.style.color = (parity === "ODD") ? "#D64545" : "#2E86C1"; 
+
+        if (data.moved !== null) {
+            document.getElementById('anim-left').innerText = `+${data.moved}`;
+            document.getElementById('anim-right').innerText = `-${data.moved}`;
+        } else {
+            document.getElementById('anim-left').innerText = "";
+            document.getElementById('anim-right').innerText = "";
+        }
+
+        document.getElementById('explanation-text').innerHTML = data.desc;
+
+        const btn = document.getElementById('btn-transfer');
+        if (tStep >= 3) {
+            btn.disabled = true;
+            btn.style.opacity = "0.5";
+            btn.innerText = "No more items";
+        } else {
+            btn.disabled = false;
+            btn.style.opacity = "1";
+            btn.innerText = "Transfer Next Number";
+        }
     }
 </script>
 
