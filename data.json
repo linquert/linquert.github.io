@@ -1,0 +1,16 @@
+[
+  {
+    "filename": "parity_matters.html",
+    "path": "solutions/parity_matters.html",
+    "title": "Parity & Partitions: A Visual Guide",
+    "id": "3432",
+    "difficulty": "Easy",
+    "tags": [
+      "Math",
+      "Prefix Sum",
+      "Array",
+      "Parity"
+    ],
+    "description": "Visualizing how modular arithmetic transforms an O(N^2) simulation into an O(1) mathematical proof."
+  }
+]

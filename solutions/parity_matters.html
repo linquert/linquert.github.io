@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="algo-id" content="3432">
+    <meta name="algo-difficulty" content="Easy">
+    <meta name="algo-tags" content="Math, Prefix Sum, Array, Parity">
+    <meta name="description" content="Visualizing how modular arithmetic transforms an O(N^2) simulation into an O(1) mathematical proof.">
+    <meta name="algo-link" content="https://leetcode.com/problems/count-partitions-with-even-sum-difference/description/">
+    <title>Parity & Partitions: A Visual Guide</title>
+    
+    <!-- Load MathJax for beautiful math rendering -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* --- Distill / Tufte Style Typography & Layout --- */
+        :root {
+            --bg-color: #fffff8;
+            --text-color: #111;
+            --accent-color: #D64545; 
+            --secondary-color: #2E86C1;
+            --code-bg: #f5f5f5;
+            --note-text: #666;
+            --font-body: 'Georgia', 'Times New Roman', serif;
+            --font-head: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            --font-mono: 'Consolas', 'Monaco', monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            font-size: 19px;
+            margin: 0;
+            padding: 0;
+            counter-reset: sidenote-counter;
+        }
+
+        article {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 700px 1fr; 
+        }
+
+        section, header { grid-column: 2; }
+
+        h1, h2, h3 {
+            font-family: var(--font-head);
+            margin-top: 2rem;
+            font-weight: 600;
+        }
+
+        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        h2 { font-size: 1.6rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; }
+        
+        p { margin-bottom: 1.5rem; }
+
+        /* --- Sidenotes --- */
+        .sidenote-number { counter-increment: sidenote-counter; }
+        .sidenote-number:after {
+            content: counter(sidenote-counter);
+            font-family: var(--font-head);
+            font-size: 0.8rem;
+            vertical-align: super;
+            color: var(--accent-color);
+            cursor: help;
+        }
+        .sidenote {
+            float: right;
+            clear: right;
+            margin-right: -45%;
+            width: 35%;
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: var(--note-text);
+            vertical-align: baseline;
+            position: relative;
+        }
+
+        /* --- Code Blocks --- */
+        pre {
+            background: var(--code-bg);
+            padding: 1.5rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            border-left: 3px solid var(--accent-color);
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+        }
+        code {
+            font-family: var(--font-mono);
+            background: rgba(0,0,0,0.05);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        pre code { background: none; padding: 0; }
+        .kw { color: #0033cc; font-weight: bold; }
+        .func { color: #990000; font-weight: bold; }
+        .type { color: #006600; }
+        .str { color: #aa1111; }
+        .com { color: #888; font-style: italic; }
+
+        /* --- Visualizer Styles --- */
+        .viz-box {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .array-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+            height: 80px;
+            font-family: var(--font-head);
+        }
+
+        .arr-item {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 4px;
+            border: 2px solid #ccc;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .idx-label {
+            position: absolute;
+            bottom: -25px;
+            font-size: 0.7rem;
+            color: #999;
+        }
+
+        /* Dynamic classes for animation */
+        .arr-item.left-side { background-color: #D6EAF8; border-color: #2E86C1; transform: scale(1.05); }
+        .arr-item.right-side { background-color: #FADBD8; border-color: #C0392B; }
+        
+        .partition-line {
+            width: 4px;
+            height: 70px;
+            background: #333;
+            margin: 0 10px;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .viz-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            background: #333;
+            color: white;
+            cursor: pointer;
+            font-family: var(--font-head);
+            font-size: 0.9rem;
+        }
+        button:hover { background: #555; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+
+        .viz-log {
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 4px;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .highlight-success { color: green; font-weight: bold; }
+        .highlight-fail { color: #aaa; }
+
+        /* --- Parity Playground Styles --- */
+        .parity-grid {
+            display: grid;
+            grid-template-columns: 1fr 50px 1fr 50px 1fr;
+            align-items: center;
+            text-align: center;
+            gap: 10px;
+            margin-top: 20px;
+            background: #fafafa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .parity-box {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            user-select: none;
+            font-weight: bold;
+            font-family: var(--font-head);
+            transition: background 0.2s;
+        }
+        .parity-box.even { background: #D6EAF8; color: #2E86C1; border-color: #2E86C1; }
+        .parity-box.odd { background: #FADBD8; color: #C0392B; border-color: #C0392B; }
+        
+        @media (max-width: 1000px) {
+            article { grid-template-columns: 1fr; padding: 1rem; }
+            section, header { grid-column: 1; }
+            .sidenote {
+                float: none;
+                width: 100%;
+                margin: 1rem 0;
+                padding: 1rem;
+                background: #f9f9f9;
+                border-left: 2px solid #ccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<article>
+    <header>
+        <h1>Parity in Partitions</h1>
+        <p style="margin-top: -10px; font-size: 0.9rem;">
+            <a href="https://leetcode.com/problems/count-partitions-with-even-sum-difference/description/" target="_blank" style="color: var(--accent-color); text-decoration: none; border-bottom: 1px dotted;">
+                View Problem on LeetCode ↗
+            </a>
+        </p>
+
+        <p style="font-family: var(--font-head); color: #666; font-size: 1.1rem;">
+            A deep dive into LeetCode 3432: Visualizing the simulation, understanding parity arithmetic, and optimizing from \(O(N^2)\) to \(O(1)\).
+        </p>
+    </header>
+
+    <section>
+        <h2>The Question</h2>
+        <p>
+            You are given an integer array <code>nums</code>. A partition splits the array at index <code>i</code> into a Left Subarray and a Right Subarray.
+        </p>
+        <p>
+            We need to count how many partitions exist such that:
+            $$ (Sum_{Left} - Sum_{Right}) \text{ is Even} $$
+        </p>
+    </section>
+
+    <!-- VISUALIZER SECTION -->
+    <section>
+        <h2>1. The Naive Simulation (Visualized)</h2>
+        <p>
+            The most obvious way to solve this is to physically "cut" the array at every possible spot, sum up the left side, sum up the right side, subtract them, and check the result.
+            <span class="sidenote-number"></span>
+            <span class="sidenote">
+                <strong>Why is this naive?</strong> <br>
+                Notice how we recalculate the sums repeatedly. In a loop of size \(N\), calculating sum takes \(O(N)\). Total time: \(O(N^2)\).
+            </span>
+        </p>
+
+        <div class="viz-box">
+            <h3 style="margin-top:0; font-size: 1.2rem; text-align:center;">Interactive Run: nums = [10, 10, 3, 7, 6]</h3>
+            
+            <div class="viz-controls">
+                <button id="btn-step" onclick="stepViz()">Step >></button>
+                <button id="btn-reset" onclick="resetViz()">Reset</button>
+            </div>
+
+            <div class="array-container" id="viz-container">
+                <!-- Javascript will inject array here -->
+            </div>
+
+            <div class="viz-log" id="viz-log">
+                Click "Step" to begin partitioning.
+            </div>
+            
+            <div style="text-align: center; margin-top: 10px; font-weight: bold;">
+                Total Even Partitions Found: <span id="count-display" style="color: var(--accent-color)">0</span>
+            </div>
+        </div>
+
+        <p>
+            The code for this simulation looks like this:
+        </p>
+
+        <pre><code class="python"><span class="kw">class</span> Solution:
+    <span class="kw">def</span> countPartitions(<span class="kw">self</span>, nums: <span class="type">List</span>[<span class="type">int</span>]) -> <span class="type">int</span>:
+        count = <span class="str">0</span>
+        n = <span class="func">len</span>(nums)
+        <span class="com"># We check partition i from 0 to n-2</span>
+        <span class="kw">for</span> i <span class="kw">in</span> <span class="func">range</span>(<span class="str">0</span>, n - <span class="str">1</span>):
+            left_sum = <span class="func">sum</span>(nums[:i+1])
+            right_sum = <span class="func">sum</span>(nums[i+1:])
+            
+            dif = left_sum - right_sum
+            
+            <span class="kw">if</span> dif % <span class="str">2</span> == <span class="str">0</span>:
+                count = count + <span class="str">1</span>
+        <span class="kw">return</span> count</code></pre>
+    </section>
+
+    <!-- PARITY EXPLANATION SECTION -->
+    <section>
+        <h2>2. Understanding Parity (The Trick)</h2>
+        <p>
+            Before we optimize, we need to understand <strong>Parity</strong>. In mathematics, parity simply means whether a number is Even or Odd.
+        </p>
+        <p>
+            The beauty of parity is that the actual numbers don't matter—only their "Even-ness" or "Odd-ness" matters.
+        </p>
+        
+        <div class="viz-box" style="background: #fffdfd; border-color: var(--accent-color);">
+            <h3 style="text-align: center; margin-top:0;">The Parity Playground</h3>
+            <p style="text-align: center; font-size: 0.9rem;">Click the boxes below to toggle between EVEN and ODD. Observe the Result.</p>
+            
+            <div class="parity-grid">
+                <div id="p-box-1" class="parity-box even" onclick="toggleParity(1)">EVEN</div>
+                <div style="font-size: 1.5rem; font-weight: bold;">-</div>
+                <div id="p-box-2" class="parity-box even" onclick="toggleParity(2)">EVEN</div>
+                <div style="font-size: 1.5rem; font-weight: bold;">=</div>
+                <div id="p-result" class="parity-box even" style="cursor: default;">EVEN</div>
+            </div>
+            
+            <div id="parity-explanation" style="text-align: center; margin-top: 15px; color: #666; font-style: italic;">
+                An Even number minus an Even number is always Even.
+            </div>
+        </div>
+
+        <p>Try the combinations above. You will discover the fundamental rules of modular arithmetic:</p>
+        <ul>
+            <li>\(Even - Even = Even\)</li>
+            <li>\(Odd - Odd = Even\)</li>
+            <li>\(Even - Odd = Odd\)</li>
+            <li>\(Odd - Even = Odd\)</li>
+        </ul>
+        <p>
+            Notice something? The result is <strong>Even</strong> if and only if the two numbers have the <strong>same parity</strong>.
+        </p>
+    </section>
+
+    <section>
+        <h2>3. The Mathematical Derivation</h2>
+        <p>
+            Let's apply the intuition from the playground to our problem. We want to know when:
+            $$ (S_L - S_R) = \text{Even} $$
+        </p>
+        <p>
+            We know that the Left Sum plus the Right Sum equals the Total Sum (\(S_T\)):
+            $$ S_L + S_R = S_T \quad \Rightarrow \quad S_R = S_T - S_L $$
+        </p>
+        <p>
+            Substitute \(S_R\) into our first equation:
+            $$ S_L - (S_T - S_L) = \text{Difference} $$
+            $$ 2 \cdot S_L - S_T = \text{Difference} $$
+        </p>
+        
+        <h3>The Aha! Moment</h3>
+        <p>
+            Look at the term \(2 \cdot S_L\). No matter what \(S_L\) is, multiplying it by 2 makes it <strong>Even</strong>.
+            <span class="sidenote-number"></span>
+            <span class="sidenote">e.g., \(2 \times 3 = 6\) (Even), \(2 \times 4 = 8\) (Even).</span>
+        </p>
+        <p>
+            So our equation is actually:
+            $$ \text{Even} - S_T = \text{Difference} $$
+        </p>
+        <p>
+            Go back to the Parity Playground rules. We are subtracting \(S_T\) from an Even number.
+        </p>
+        <ul>
+            <li>If \(S_T\) is <strong>Even</strong>: We have \(Even - Even\). Result is <strong>Even</strong>.</li>
+            <li>If \(S_T\) is <strong>Odd</strong>: We have \(Even - Odd\). Result is <strong>Odd</strong>.</li>
+        </ul>
+    </section>
+
+    <section>
+        <h2>4. The Optimized Solution</h2>
+        <p>
+            The math proves that the individual partitions don't matter! The result depends <strong>entirely</strong> on the Total Sum of the array.
+        </p>
+        <div style="background: #eef; padding: 15px; border-radius: 5px; border-left: 5px solid #2E86C1;">
+            <strong>Conclusion:</strong><br>
+            1. If <code>sum(nums)</code> is Even, <em>every possible partition</em> has an even difference. Return \(N-1\).<br>
+            2. If <code>sum(nums)</code> is Odd, <em>no partition</em> has an even difference. Return 0.
+        </div>
+
+        <pre><code class="python"><span class="kw">class</span> Solution:
+    <span class="kw">def</span> countPartitions(<span class="kw">self</span>, nums: <span class="type">List</span>[<span class="type">int</span>]) -> <span class="type">int</span>:
+        n = <span class="func">len</span>(nums)
+        
+        <span class="com"># We cannot partition if there are fewer than 2 elements</span>
+        <span class="kw">if</span> n < <span class="str">2</span>:
+            <span class="kw">return</span> <span class="str">0</span>
+            
+        total = <span class="func">sum</span>(nums)
+        
+        <span class="com"># O(1) Logic based on parity</span>
+        <span class="kw">return</span> n - <span class="str">1</span> <span class="kw">if</span> total % <span class="str">2</span> == <span class="str">0</span> <span class="kw">else</span> <span class="str">0</span></code></pre>
+    </section>
+
+    <section>
+        <h2>Syntax Explained</h2>
+        <p>For those new to Python, here is a breakdown of the specific syntax used:</p>
+        
+        <p><code>nums: List[int] -> int</code> <br>
+        <small style="color:#666">This is a <strong>Type Hint</strong>. It tells developers (and IDEs) that <code>nums</code> is a list of integers, and the function returns an integer. Python ignores this when running the code.</small></p>
+
+        <p><code>sum(nums)</code> <br>
+        <small style="color:#666">A built-in Python function that iterates over the list and adds all values. It runs in \(O(N)\) time.</small></p>
+
+        <p><code>return A if condition else B</code> <br>
+        <small style="color:#666">This is a <strong>Ternary Operator</strong> (one-line if/else). In C++ or Java, this would be written as <code>return condition ? A : B;</code>.</small></p>
+    </section>
+    
+    <br><br><br>
+</article>
+
+<!-- JAVASCRIPT FOR INTERACTIVITY -->
+<script>
+    // --- Visualizer Logic ---
+    const vizNums = [10, 10, 3, 7, 6];
+    let partitionIndex = -1; // -1 means not started
+    let vizCount = 0;
+
+    function renderViz() {
+        const container = document.getElementById('viz-container');
+        container.innerHTML = '';
+        
+        // Render array items
+        vizNums.forEach((num, idx) => {
+            const div = document.createElement('div');
+            div.className = 'arr-item';
+            div.innerText = num;
+            
+            // Add index label
+            const label = document.createElement('div');
+            label.className = 'idx-label';
+            label.innerText = idx;
+            div.appendChild(label);
+
+            if (partitionIndex !== -1) {
+                if (idx <= partitionIndex) div.classList.add('left-side');
+                else div.classList.add('right-side');
+            }
+            container.appendChild(div);
+
+            // Add partition line visually
+            if (partitionIndex !== -1 && idx === partitionIndex) {
+                const line = document.createElement('div');
+                line.className = 'partition-line';
+                container.appendChild(line);
+            }
+        });
+    }
+
+    function stepViz() {
+        if (partitionIndex >= vizNums.length - 2) {
+            document.getElementById('viz-log').innerHTML = `<span style="color:blue"><strong>End of Array. Total Count: ${vizCount}</strong></span>`;
+            document.getElementById('btn-step').disabled = true;
+            return;
+        }
+
+        partitionIndex++;
+        renderViz();
+
+        // Calculate Sums
+        let leftSum = 0;
+        let rightSum = 0;
+        for(let i=0; i<vizNums.length; i++) {
+            if (i <= partitionIndex) leftSum += vizNums[i];
+            else rightSum += vizNums[i];
+        }
+
+        const dif = leftSum - rightSum;
+        const isEven = (dif % 2 === 0);
+        
+        if (isEven) vizCount++;
+        document.getElementById('count-display').innerText = vizCount;
+
+        // Log
+        const logHtml = `
+            <div>Partition at index <strong>${partitionIndex}</strong></div>
+            <div>Left Sum: <strong>${leftSum}</strong> | Right Sum: <strong>${rightSum}</strong></div>
+            <div>Diff: ${leftSum} - ${rightSum} = <strong>${dif}</strong></div>
+            <div class="${isEven ? 'highlight-success' : 'highlight-fail'}">
+                ${isEven ? 'Result is EVEN. Count++' : 'Result is ODD. Ignored.'}
+            </div>
+        `;
+        document.getElementById('viz-log').innerHTML = logHtml;
+    }
+
+    function resetViz() {
+        partitionIndex = -1;
+        vizCount = 0;
+        document.getElementById('count-display').innerText = "0";
+        document.getElementById('viz-log').innerText = 'Click "Step" to begin partitioning.';
+        document.getElementById('btn-step').disabled = false;
+        renderViz();
+    }
+
+    // Initialize Viz
+    renderViz();
+
+    // --- Parity Playground Logic ---
+    let p1 = 0; // 0 = even, 1 = odd
+    let p2 = 0;
+
+    function toggleParity(boxNum) {
+        if (boxNum === 1) {
+            p1 = 1 - p1;
+            updateParityBox('p-box-1', p1);
+        } else {
+            p2 = 1 - p2;
+            updateParityBox('p-box-2', p2);
+        }
+        calculateParityResult();
+    }
+
+    function updateParityBox(id, val) {
+        const el = document.getElementById(id);
+        if (val === 0) {
+            el.className = "parity-box even";
+            el.innerText = "EVEN";
+        } else {
+            el.className = "parity-box odd";
+            el.innerText = "ODD";
+        }
+    }
+
+    function calculateParityResult() {
+        // Even(0) - Even(0) = 0 (Even)
+        // Even(0) - Odd(1) = -1 (Odd)
+        // Odd(1) - Even(0) = 1 (Odd)
+        // Odd(1) - Odd(1) = 0 (Even)
+        const res = Math.abs(p1 - p2) % 2;
+        updateParityBox('p-result', res);
+        
+        const explanations = {
+            "0-0": "Even - Even = Even. (e.g., 10 - 4 = 6)",
+            "0-1": "Even - Odd = Odd. (e.g., 10 - 3 = 7)",
+            "1-0": "Odd - Even = Odd. (e.g., 11 - 4 = 7)",
+            "1-1": "Odd - Odd = Even. (e.g., 11 - 3 = 8)"
+        };
+        document.getElementById('parity-explanation').innerText = explanations[`${p1}-${p2}`];
+    }
+</script>
+
+</body>
+</html>
