@@ -1,270 +1,235 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Algorithm Notes</title>
-    <style>
-        :root {
-            --bg-color: #fffff8;
-            --text-color: #111;
-            --accent-color: #D64545;
-            --secondary-color: #2E86C1;
-            --font-body: 'Georgia', 'Times New Roman', serif;
-            --font-head: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-        }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Algorithm Notebook — Index</title>
+  <meta name="description" content="Searchable index of algorithm solutions with accessible filtering, highlighting, and safe rendering." />
+  <style>
+    :root{
+      --bg:#fbfbf9; --card:#fff; --muted:#6b6b6b; --accent:#2E86C1; --radius:10px; --maxw:1100px;
+      --font-head: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial;
+      --font-body: Georgia, 'Times New Roman', serif;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;padding:24px;background:var(--bg);color:#111;font-family:var(--font-body);line-height:1.5}
+    .container{max-width:var(--maxw);margin:0 auto}
+    header{display:flex;flex-direction:column;gap:6px;margin-bottom:18px}
+    h1{font-family:var(--font-head);font-size:1.9rem;margin:0}
+    .subtitle{color:var(--muted);font-size:0.95rem}
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            font-family: var(--font-body);
-            line-height: 1.6;
-            margin: 0;
-            padding: 2rem;
-        }
+    /* controls */
+    .controls{display:flex;gap:12px;align-items:center;margin:18px 0 22px;flex-wrap:wrap}
+    .search{display:flex;flex:1;min-width:220px}
+    input[type="search"]{flex:1;padding:10px 12px;border-radius:8px;border:1px solid #d7d7d7;font-size:0.98rem;font-family:var(--font-head);outline-offset:3px}
+    input[type="search"]:focus{box-shadow:0 0 0 4px rgba(46,134,193,0.08);border-color:var(--accent)}
+    .controls .btn{padding:8px 12px;border-radius:8px;border:1px solid #ddd;background:#fff;cursor:pointer;font-family:var(--font-head)}
+    .controls .btn.secondary{background:#f6f8fb}
 
-        header {
-            max-width: 900px;
-            margin: 0 auto 3rem auto;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 1rem;
-        }
+    /* tagbar */
+    .tagbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .tag{background:#f5f5f5;padding:6px 10px;border-radius:999px;border:0;font-family:var(--font-head);cursor:pointer}
+    .tag[aria-pressed="true"]{background:var(--accent);color:#fff;box-shadow:0 2px 8px rgba(46,134,193,0.12)}
 
-        h1 {
-            font-family: var(--font-head);
-            font-size: 2.5rem;
-            margin: 0;
-        }
+    /* grid */
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+    .card{background:var(--card);padding:16px;border-radius:var(--radius);border:1px solid #e7e7e7;display:flex;flex-direction:column;min-height:140px;text-decoration:none;color:inherit}
+    .card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.05)}
+    .card .meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .id{font-family:var(--font-head);color:#888}
+    .difficulty{font-family:var(--font-head);font-weight:700;font-size:0.75rem;padding:4px 8px;border-radius:8px}
+    .diff-easy{background:#e8f5e9;color:#2e7d32}
+    .diff-medium{background:#fff3e0;color:#ef6c00}
+    .diff-hard{background:#ffebee;color:#c62828}
+    h2{font-family:var(--font-head);font-size:1.05rem;margin:0 0 8px}
+    p.desc{margin:0 0 12px;color:var(--muted);flex:1}
+    .tags{display:flex;gap:8px;flex-wrap:wrap}
+    .tag-pill{background:#f2f4f6;padding:4px 8px;border-radius:6px;font-size:0.78rem}
 
-        /* --- Filtering Section --- */
-        .controls {
-            max-width: 900px;
-            margin: 0 auto 2rem auto;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            align-items: center;
-        }
+    /* utilities */
+    .controls-small{display:flex;gap:8px}
+    .no-results{padding:14px;border-radius:10px;background:#fff7f5;border:1px solid #f2d6d4;color:#7a2922}
+    mark{background: #ffd54f; color: #111; padding:0 2px;border-radius:2px}
 
-        input[type="text"] {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            font-family: var(--font-head);
-            font-size: 1rem;
-            flex-grow: 1;
-        }
-
-        .tag-filter {
-            background: #eee;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-family: var(--font-head);
-            font-size: 0.85rem;
-            transition: all 0.2s;
-        }
-
-        .tag-filter:hover { background: #ddd; }
-        .tag-filter.active { background: var(--secondary-color); color: white; }
-
-        /* --- Grid Layout --- */
-        .grid {
-            max-width: 900px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
-        }
-
-        .card {
-            background: white;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-            padding: 20px;
-            transition: transform 0.2s, box-shadow 0.2s;
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
-            border-color: var(--secondary-color);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .card-id {
-            font-family: var(--font-head);
-            font-weight: bold;
-            color: #888;
-            font-size: 0.9rem;
-        }
-
-        .difficulty {
-            font-family: var(--font-head);
-            font-size: 0.75rem;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-
-        .diff-easy { background: #e8f5e9; color: #2e7d32; }
-        .diff-medium { background: #fff3e0; color: #ef6c00; }
-        .diff-hard { background: #ffebee; color: #c62828; }
-
-        .card h2 {
-            font-family: var(--font-head);
-            font-size: 1.2rem;
-            margin: 0 0 10px 0;
-            line-height: 1.3;
-        }
-
-        .card p {
-            font-size: 0.95rem;
-            color: #555;
-            margin: 0 0 15px 0;
-            flex-grow: 1;
-        }
-
-        .card-tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-        }
-
-        .tag {
-            font-family: var(--font-head);
-            font-size: 0.75rem;
-            background: #f5f5f5;
-            padding: 2px 8px;
-            border-radius: 4px;
-            color: #666;
-        }
-    </style>
+    @media (max-width:520px){
+      .controls{flex-direction:column;align-items:stretch}
+      .search{order:1}
+    }
+  </style>
 </head>
 <body>
+  <div class="container">
+    <header>
+      <h1>Algorithm Notebook</h1>
+      <div class="subtitle">Search, filter and browse algorithm solutions — accessible, safe, and fast.</div>
+    </header>
 
-<header>
-    <h1>Algorithm Notebook</h1>
-    <p style="color: #666; font-style: italic;">A collection of visualized solutions & philosophical breakdowns.</p>
-</header>
+    <div class="controls" role="region" aria-label="Controls">
+      <div class="search" role="search">
+        <input id="searchBox" type="search" placeholder="Search by title, id, or description..." aria-label="Search solutions" />
+      </div>
 
-<div class="controls">
-    <input type="text" id="search-box" placeholder="Search by title or ID...">
-    <!-- Tags will be injected here by JS -->
-    <div id="tag-container" style="display:flex; gap:5px;"></div>
-</div>
+      <div class="controls-small">
+        <button id="clearBtn" class="btn" title="Clear filters">Clear</button>
+        <button id="sortBtn" class="btn secondary" title="Toggle sort order">Sort: ID ⬆️</button>
+      </div>
+    </div>
 
-<div class="grid" id="solution-grid">
-    <!-- Cards injected here -->
-</div>
+    <div id="tagBar" class="tagbar" role="toolbar" aria-label="Filter by tags"></div>
 
-<script>
+    <main style="margin-top:18px">
+      <div id="results" class="grid" aria-live="polite" aria-busy="false"></div>
+      <div id="noResults" class="no-results" style="display:none;margin-top:12px">No solutions found. Try clearing filters.</div>
+    </main>
+  </div>
+
+  <script>
+    /* Improved index.html script
+       - Safely fetches data.json
+       - Uses DOM APIs (no innerHTML for untrusted content)
+       - Debounced search, tag multi-select, highlighting, sorting
+    */
+
+    const DATA_URL = 'data.json';
     let allData = [];
-    let activeTag = null;
+    let activeTags = new Set();
+    let sortAsc = true; // true => ascending by numeric id when possible
 
-    async function loadSolutions() {
-        try {
-            const response = await fetch('data.json');
-            if (!response.ok) throw new Error("Could not load data.json");
-            allData = await response.json();
-            
-            generateTags();
-            renderGrid(allData);
-        } catch (error) {
-            console.error(error);
-            document.getElementById('solution-grid').innerHTML = `<p>Error loading solutions. Did you run <code>python generate_index.py</code>?</p>`;
+    const el = {
+      search: document.getElementById('searchBox'),
+      tagBar: document.getElementById('tagBar'),
+      results: document.getElementById('results'),
+      noResults: document.getElementById('noResults'),
+      clearBtn: document.getElementById('clearBtn'),
+      sortBtn: document.getElementById('sortBtn')
+    };
+
+    // Utility: escape regex special chars
+    function escapeRegExp(string){
+      return string.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&');
+    }
+
+    // Safe highlight: returns DocumentFragment with mark around matches
+    function highlightText(text, query){
+      const frag = document.createDocumentFragment();
+      if(!query){ frag.appendChild(document.createTextNode(text)); return frag; }
+      const q = escapeRegExp(query);
+      const re = new RegExp(q, 'gi');
+      let lastIndex = 0;
+      let m;
+      while((m = re.exec(text))){
+        if(m.index > lastIndex){
+          frag.appendChild(document.createTextNode(text.slice(lastIndex, m.index)));
         }
+        const mark = document.createElement('mark');
+        mark.textContent = m[0];
+        frag.appendChild(mark);
+        lastIndex = re.lastIndex;
+      }
+      if(lastIndex < text.length) frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+      return frag;
     }
 
-    function generateTags() {
-        const tags = new Set();
-        allData.forEach(item => item.tags.forEach(t => tags.add(t)));
-        
-        const container = document.getElementById('tag-container');
-        Array.from(tags).sort().forEach(tag => {
-            const btn = document.createElement('button');
-            btn.className = 'tag-filter';
-            btn.innerText = tag;
-            btn.onclick = () => toggleTag(tag, btn);
-            container.appendChild(btn);
+    // Render a single card safely
+    function renderCard(item, query){
+      const a = document.createElement('a');
+      a.className = 'card';
+      a.href = item.path || '#';
+      a.setAttribute('rel', 'noopener noreferrer');
+
+      const meta = document.createElement('div'); meta.className = 'meta';
+      const idSpan = document.createElement('div'); idSpan.className = 'id'; idSpan.textContent = `#${item.id || ''}`;
+      const diff = document.createElement('div'); diff.className = 'difficulty ' + (item.difficulty ? ('diff-' + item.difficulty.toLowerCase()) : '');
+      diff.textContent = item.difficulty || '';
+      meta.appendChild(idSpan); meta.appendChild(diff);
+
+      const h2 = document.createElement('h2'); h2.appendChild(highlightText(item.title || '', query));
+      const p = document.createElement('p'); p.className = 'desc'; p.appendChild(highlightText(item.description || '', query));
+
+      const tagWrap = document.createElement('div'); tagWrap.className = 'tags';
+      (Array.isArray(item.tags) ? item.tags : []).forEach(t => {
+        const span = document.createElement('span'); span.className = 'tag-pill'; span.textContent = t; tagWrap.appendChild(span);
+      });
+
+      a.appendChild(meta); a.appendChild(h2); a.appendChild(p); a.appendChild(tagWrap);
+      return a;
+    }
+
+    // Build unique sorted tag list and render tag buttons
+    function buildTagBar(data){
+      const set = new Set();
+      data.forEach(it => (Array.isArray(it.tags) ? it.tags.forEach(t => set.add(t)) : undefined));
+      const tags = Array.from(set).sort((a,b) => a.localeCompare(b, undefined, {sensitivity:'base'}));
+      el.tagBar.innerHTML = '';
+      tags.forEach(tag => {
+        const btn = document.createElement('button');
+        btn.className = 'tag'; btn.type = 'button'; btn.textContent = tag;
+        btn.setAttribute('aria-pressed', 'false');
+        btn.addEventListener('click', () => {
+          if(activeTags.has(tag)){
+            activeTags.delete(tag); btn.setAttribute('aria-pressed','false');
+          } else { activeTags.add(tag); btn.setAttribute('aria-pressed','true'); }
+          triggerFilter();
         });
+        el.tagBar.appendChild(btn);
+      });
     }
 
-    function toggleTag(tag, btnElement) {
-        const buttons = document.querySelectorAll('.tag-filter');
-        
-        if (activeTag === tag) {
-            // Deactivate
-            activeTag = null;
-            btnElement.classList.remove('active');
-        } else {
-            // Activate new
-            buttons.forEach(b => b.classList.remove('active'));
-            activeTag = tag;
-            btnElement.classList.add('active');
-        }
-        filterData();
+    // Filtering logic
+    function filterAndRender(){
+      const q = (el.search.value || '').trim().toLowerCase();
+      // filter
+      let filtered = allData.filter(item => {
+        const matchesQuery = !q || [item.title, item.id, item.description].some(field => (field || '').toString().toLowerCase().includes(q));
+        const matchesTags = activeTags.size === 0 || (Array.isArray(item.tags) && Array.from(activeTags).every(t => item.tags.includes(t)));
+        return matchesQuery && matchesTags;
+      });
+
+      // sort
+      filtered.sort((a,b) => {
+        const ai = parseInt(a.id,10); const bi = parseInt(b.id,10);
+        if(!isNaN(ai) && !isNaN(bi)) return sortAsc ? ai - bi : bi - ai;
+        const as = (a.id||'').toString().toLowerCase(); const bs = (b.id||'').toString().toLowerCase();
+        return sortAsc ? as.localeCompare(bs) : bs.localeCompare(as);
+      });
+
+      // render
+      el.results.innerHTML = '';
+      if(filtered.length === 0){ el.noResults.style.display = 'block'; return; }
+      el.noResults.style.display = 'none';
+      const qForHighlight = q;
+      filtered.forEach(item => el.results.appendChild(renderCard(item, qForHighlight)));
     }
 
-    function filterData() {
-        const query = document.getElementById('search-box').value.toLowerCase();
-        
-        const filtered = allData.filter(item => {
-            const matchesSearch = item.title.toLowerCase().includes(query) || 
-                                  item.id.includes(query) ||
-                                  item.description.toLowerCase().includes(query);
-            const matchesTag = activeTag ? item.tags.includes(activeTag) : true;
-            
-            return matchesSearch && matchesTag;
-        });
+    // debounce helper
+    function debounce(fn, ms){ let t; return (...a)=>{ clearTimeout(t); t = setTimeout(()=>fn(...a), ms); }; }
+    const triggerFilter = debounce(filterAndRender, 180);
 
-        renderGrid(filtered);
+    // wire controls
+    el.search.addEventListener('input', ()=> triggerFilter());
+    el.clearBtn.addEventListener('click', ()=>{ el.search.value=''; activeTags.clear(); Array.from(el.tagBar.querySelectorAll('[aria-pressed]')).forEach(b=>b.setAttribute('aria-pressed','false')); triggerFilter(); });
+    el.sortBtn.addEventListener('click', ()=>{ sortAsc = !sortAsc; el.sortBtn.textContent = 'Sort: ID ' + (sortAsc ? '⬆️' : '⬇️'); triggerFilter(); });
+
+    // fetch data and initialize
+    async function init(){
+      el.results.setAttribute('aria-busy','true');
+      try{
+        const resp = await fetch(DATA_URL, {cache:'no-cache'});
+        if(!resp.ok) throw new Error('Failed to load data.json');
+        allData = await resp.json();
+        if(!Array.isArray(allData)) allData = [];
+        buildTagBar(allData);
+        filterAndRender();
+      }catch(err){
+        el.results.innerHTML = '';
+        el.noResults.style.display = 'block';
+        el.noResults.textContent = 'Error loading index: ' + err.message;
+        console.error(err);
+      }finally{ el.results.setAttribute('aria-busy','false'); }
     }
 
-    function renderGrid(items) {
-        const grid = document.getElementById('solution-grid');
-        grid.innerHTML = '';
-
-        items.forEach(item => {
-            const diffClass = `diff-${item.difficulty.toLowerCase()}`;
-            
-            const card = document.createElement('a');
-            card.href = item.path;
-            card.className = 'card';
-            
-            card.innerHTML = `
-                <div class="card-header">
-                    <span class="card-id">#${item.id}</span>
-                    <span class="difficulty ${diffClass}">${item.difficulty}</span>
-                </div>
-                <h2>${item.title}</h2>
-                <p>${item.description}</p>
-                <div class="card-tags">
-                    ${item.tags.map(t => `<span class="tag">${t}</span>`).join('')}
-                </div>
-            `;
-            grid.appendChild(card);
-        });
-    }
-
-    // Event Listeners
-    document.getElementById('search-box').addEventListener('input', filterData);
-    
-    // Init
-    loadSolutions();
-</script>
-
+    // kick off
+    init();
+  </script>
 </body>
 </html>
