@@ -13,4 +13,17 @@
     ],
     "description": "Visualizing how modular arithmetic transforms an O(N^2) simulation into an O(1) mathematical proof."
   }
+  {
+    "filename": "count_odds.html",
+    "path": "solutions/count_odds.html",
+    "title": "Counting Odds: Interval Math",
+    "id": "1523",
+    "difficulty": "Easy",
+    "tags": [
+      "Math",
+      "Interval",
+      "Parity"
+    ],
+    "description": "Visualizing the math behind counting odd numbers in a range with O(1) complexity."
+  }
 ]
