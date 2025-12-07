@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="algo-id" content="1523">
+    <meta name="algo-difficulty" content="Easy">
+    <meta name="algo-tags" content="Math, Interval, Parity">
+    <meta name="description" content="Visualizing the math behind counting odd numbers in a range with O(1) complexity.">
+    <meta name="algo-link" content="https://leetcode.com/problems/count-odd-numbers-in-an-interval-range/">
+    <title>Counting Odds: Interval Math</title>
+    
+    <!-- Load MathJax for beautiful math rendering -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* --- Distill / Tufte Style Typography & Layout --- */
+        :root {
+            --bg-color: #fffff8;
+            --text-color: #111;
+            --accent-color: #D64545; 
+            --secondary-color: #2E86C1;
+            --code-bg: #f5f5f5;
+            --note-text: #666;
+            --font-body: 'Georgia', 'Times New Roman', serif;
+            --font-head: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            --font-mono: 'Consolas', 'Monaco', monospace;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-body);
+            line-height: 1.6;
+            font-size: 19px;
+            margin: 0;
+            padding: 0;
+            counter-reset: sidenote-counter;
+        }
+
+        article {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 700px 1fr; 
+        }
+
+        section, header { grid-column: 2; }
+
+        h1, h2, h3, h4 {
+            font-family: var(--font-head);
+            margin-top: 2rem;
+            font-weight: 600;
+        }
+
+        h1 { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        h2 { font-size: 1.6rem; border-bottom: 1px solid #ddd; padding-bottom: 0.5rem; }
+        h3 { font-size: 1.3rem; margin-bottom: 0.5rem; color: #444; }
+        
+        p { margin-bottom: 1.5rem; }
+
+        /* --- Sidenotes --- */
+        .sidenote-number { counter-increment: sidenote-counter; }
+        .sidenote-number:after {
+            content: counter(sidenote-counter);
+            font-family: var(--font-head);
+            font-size: 0.8rem;
+            vertical-align: super;
+            color: var(--accent-color);
+            cursor: help;
+        }
+        .sidenote {
+            float: right;
+            clear: right;
+            margin-right: -45%;
+            width: 35%;
+            margin-top: 0;
+            margin-bottom: 1rem;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: var(--note-text);
+            vertical-align: baseline;
+            position: relative;
+        }
+
+        /* --- Code Blocks --- */
+        pre {
+            background: var(--code-bg);
+            padding: 1.5rem;
+            border-radius: 4px;
+            overflow-x: auto;
+            border-left: 3px solid var(--accent-color);
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+        }
+        code {
+            font-family: var(--font-mono);
+            background: rgba(0,0,0,0.05);
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+        pre code { background: none; padding: 0; }
+        .kw { color: #0033cc; font-weight: bold; }
+        .func { color: #990000; font-weight: bold; }
+        .type { color: #006600; }
+        .str { color: #aa1111; }
+        .com { color: #888; font-style: italic; }
+
+        /* --- Example Box Styles --- */
+        .example-box {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .example-box pre {
+            background: transparent;
+            border: none;
+            padding: 10px 0 0 0;
+            margin: 0;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+        }
+
+        /* --- Visualizer Styles --- */
+        .viz-box {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 2rem 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        /* Number Line Specifics */
+        .number-line {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+            margin: 20px 0;
+            font-family: var(--font-mono);
+        }
+
+        .num-box {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: #ccc;
+            transition: all 0.3s ease;
+        }
+
+        /* In Range but Even */
+        .num-box.in-range {
+            border-color: #333;
+            color: #333;
+            background: #f0f0f0;
+        }
+
+        /* In Range and Odd */
+        .num-box.in-range.odd {
+            background-color: #FADBD8;
+            border-color: #C0392B;
+            color: #C0392B;
+            font-weight: bold;
+            transform: scale(1.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-width: 400px;
+            margin: 0 auto 20px auto;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .logic-card {
+            border: 1px solid #eee;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .logic-card:hover { transform: translateX(5px); border-color: var(--secondary-color); }
+        .logic-card.active { border-left: 5px solid var(--secondary-color); background: #f0f8ff; }
+
+        @media (max-width: 1000px) {
+            article { grid-template-columns: 1fr; padding: 1rem; }
+            section, header { grid-column: 1; }
+            .sidenote {
+                float: none;
+                width: 100%;
+                margin: 1rem 0;
+                padding: 1rem;
+                background: #f9f9f9;
+                border-left: 2px solid #ccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<article>
+    <header>
+        <h1>Count Odd Numbers in Range</h1>
+        <p style="margin-top: -10px; font-size: 0.9rem;">
+            <a href="https://leetcode.com/problems/count-odd-numbers-in-an-interval-range/" target="_blank" style="color: var(--accent-color); text-decoration: none; border-bottom: 1px dotted;">
+                View Problem on LeetCode ↗
+            </a>
+        </p>
+
+        <p style="font-family: var(--font-head); color: #666; font-size: 1.1rem;">
+            A deep dive into LeetCode 1523: Why a simple loop fails, and how to use basic arithmetic to solve it in \(O(1)\).
+        </p>
+    </header>
+
+    <section>
+        <h2>The Question</h2>
+        <div style="background: #f9f9f9; padding: 20px; border-left: 4px solid var(--secondary-color); border-radius: 4px; margin-bottom: 2rem;">
+            <p style="margin-top: 0;">Given two non-negative integers <code>low</code> and <code>high</code>. Return the count of odd numbers between <code>low</code> and <code>high</code> (inclusive).</p>
+        </div>
+
+        <h3>Examples</h3>
+        
+        <div class="example-box">
+            <strong style="color: var(--secondary-color);">Example 1:</strong>
+            <pre>Input: low = 3, high = 7
+Output: 3
+Explanation: The odd numbers between 3 and 7 are [3, 5, 7].</pre>
+        </div>
+
+        <div class="example-box">
+            <strong style="color: var(--secondary-color);">Example 2:</strong>
+            <pre>Input: low = 8, high = 10
+Output: 1
+Explanation: The odd numbers between 8 and 10 are [9].</pre>
+        </div>
+
+        <p><strong>Constraints:</strong> <code>0 <= low <= high <= 10^9</code></p>
+    </section>
+
+    <!-- NAIVE APPROACH -->
+    <section>
+        <h2>1. The Naive Loop (And Why It Fails)</h2>
+        <p>
+            The intuitive approach is to count them one by one. You start at <code>low</code>, walk up to <code>high</code>, and check if each number is odd.
+            <span class="sidenote-number"></span>
+            <span class="sidenote">
+                <strong>Time Complexity:</strong> \(O(N)\) where \(N\) is the difference between high and low.
+            </span>
+        </p>
+
+        <pre><code class="python"><span class="com"># This is too slow!</span>
+<span class="kw">def</span> countOdds(low, high):
+    count = <span class="str">0</span>
+    <span class="kw">for</span> i <span class="kw">in</span> <span class="func">range</span>(low, high + <span class="str">1</span>):
+        <span class="kw">if</span> i % <span class="str">2</span> != <span class="str">0</span>:
+            count += <span class="str">1</span>
+    <span class="kw">return</span> count</code></pre>
+
+        <p>
+            The constraint says <code>high</code> can be \(10^9\) (1 billion). A simple loop will result in a <strong>Time Limit Exceeded (TLE)</strong> error. We need a mathematical approach that works instantly, or \(O(1)\).
+        </p>
+    </section>
+
+    <!-- VISUALIZER SECTION -->
+    <section>
+        <h2>2. Visualizing the Interval</h2>
+        <p>
+            Roughly half of all integers are odd. However, the exact count depends on the <strong>parity</strong> (even or odd status) of the starting and ending numbers.
+        </p>
+        <p>
+            Drag the sliders below to change the interval. Watch how the endpoints affect the "Total Count".
+        </p>
+
+        <div class="viz-box">
+            <div class="controls">
+                <div class="control-group">
+                    <label>Low: <strong id="val-low">3</strong></label>
+                    <input type="range" id="range-low" min="0" max="20" value="3" oninput="updateViz()">
+                </div>
+                <div class="control-group">
+                    <label>High: <strong id="val-high">7</strong></label>
+                    <input type="range" id="range-high" min="0" max="20" value="7" oninput="updateViz()">
+                </div>
+            </div>
+
+            <div class="number-line" id="viz-container">
+                <!-- Javascript injects numbers here -->
+            </div>
+
+            <div style="background: #f4f4f4; padding: 15px; border-radius: 6px; text-align: center; margin-top: 20px;">
+                <div style="font-size: 1.2rem;">
+                    Count: <span id="viz-count" style="color: var(--accent-color); font-weight: bold; font-size: 1.5rem;">3</span>
+                </div>
+                <div id="viz-explanation" style="font-size: 0.9rem; margin-top: 5px; color: #555;">
+                    <!-- JS Explainer -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- MATH SECTION -->
+    <section>
+        <h2>3. The Logic & Math</h2>
+        <p>
+            We know the "distance" or total numbers covered is roughly proportional to the difference <code>high - low</code>.
+        </p>
+        <p>
+            Let's look at the math logic used in the provided solution:
+        </p>
+        
+        <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 2rem;">
+            <!-- CASE 1 -->
+            <div class="logic-card" id="card-ee" onclick="highlightLogic('ee')">
+                <strong>Case 1: Low is EVEN & High is EVEN</strong>
+                <br>
+                <small>e.g., Low=2, High=6 (Interval: 2, <strong>3</strong>, 4, <strong>5</strong>, 6)</small>
+                <div style="margin-top:5px; color: #444;">
+                    Since the borders are even, the odds are strictly "sandwiched" inside.
+                    <br>
+                    $$ \text{Count} = \frac{\text{High} - \text{Low}}{2} $$
+                </div>
+            </div>
+
+            <!-- CASE 2 -->
+            <div class="logic-card" id="card-else" onclick="highlightLogic('else')">
+                <strong>Case 2: Everything Else</strong>
+                <br>
+                <small>e.g., Low=3, High=7 (Odd-Odd) OR Low=2, High=5 (Even-Odd)...</small>
+                <div style="margin-top:5px; color: #444;">
+                    If at least one endpoint is <strong>Odd</strong>, integer division rounds down and misses one number. We must add 1.
+                    <br>
+                    $$ \text{Count} = \frac{\text{High} - \text{Low}}{2} + 1 $$
+                </div>
+            </div>
+        </div>
+
+        <p>
+            <strong>Why does `// 2` work?</strong> <br>
+            Integer division by 2 calculates how many "pairs" of (Even, Odd) fit in the range. If we start or end on an Odd number, we have an "extra" incomplete pair that contains an odd number, hence the <code>+ 1</code>.
+        </p>
+
+    </section>
+
+    <!-- CODE SECTION -->
+    <section>
+        <h2>4. The Solution Code</h2>
+        <p>
+            Here is the implementation derived from the logic above. It runs in \(O(1)\) time and \(O(1)\) space.
+        </p>
+
+        <pre><code class="python"><span class="kw">class</span> Solution:
+    <span class="kw">def</span> countOdds(<span class="kw">self</span>, low: <span class="type">int</span>, high: <span class="type">int</span>) -> <span class="type">int</span>:
+        <span class="com"># Check if both boundaries are Even</span>
+        <span class="kw">if</span> low % <span class="str">2</span> == <span class="str">0</span> <span class="kw">and</span> high % <span class="str">2</span> == <span class="str">0</span>:
+            <span class="com"># Case 1: Even boundaries squeeze the odds</span>
+            count = (high - low) // <span class="str">2</span>
+        <span class="kw">else</span>:
+            <span class="com"># Case 2: At least one boundary is Odd</span>
+            <span class="com"># We gain an extra odd number</span>
+            count = ((high - low) // <span class="str">2</span>) + <span class="str">1</span>
+            
+        <span class="kw">return</span> count</code></pre>
+
+        <h3>Alternative Approach (One-Liner)</h3>
+        <p>
+            Another way to think about it is counting how many odd numbers exist from <code>0</code> to <code>high</code>, and subtracting how many exist from <code>0</code> to <code>low - 1</code>.
+            <span class="sidenote-number"></span>
+            <span class="sidenote">Formula: <code>(n + 1) // 2</code> gives count of odds from 0 to n.</span>
+        </p>
+        <pre><code class="python"><span class="kw">return</span> (high + <span class="str">1</span>) // <span class="str">2</span> - low // <span class="str">2</span></code></pre>
+    </section>
+
+    <br><br><br>
+</article>
+
+<!-- JAVASCRIPT FOR INTERACTIVITY -->
+<script>
+    // --- Visualizer Logic ---
+    function updateViz() {
+        const lowInput = document.getElementById('range-low');
+        const highInput = document.getElementById('range-high');
+        
+        let low = parseInt(lowInput.value);
+        let high = parseInt(highInput.value);
+
+        // Prevent crossing
+        if (low > high) {
+            high = low;
+            highInput.value = high;
+        }
+
+        document.getElementById('val-low').innerText = low;
+        document.getElementById('val-high').innerText = high;
+
+        // Render Boxes
+        const container = document.getElementById('viz-container');
+        container.innerHTML = '';
+        
+        // Show a slightly wider range for context
+        const startRender = 0;
+        const endRender = 20;
+
+        for (let i = startRender; i <= endRender; i++) {
+            const div = document.createElement('div');
+            div.className = 'num-box';
+            div.innerText = i;
+            
+            if (i >= low && i <= high) {
+                div.classList.add('in-range');
+                if (i % 2 !== 0) {
+                    div.classList.add('odd');
+                }
+            } else {
+                // Dim numbers outside range
+                div.style.opacity = "0.3";
+            }
+            
+            container.appendChild(div);
+        }
+
+        // Calculate Logic
+        const diff = high - low;
+        let count = 0;
+        let explanation = "";
+
+        if (low % 2 === 0 && high % 2 === 0) {
+            count = Math.floor(diff / 2);
+            explanation = `Low (${low}) is Even, High (${high}) is Even.<br>Formula: (${high}-${low}) // 2 = <strong>${count}</strong>`;
+            highlightLogic('ee');
+        } else {
+            count = Math.floor(diff / 2) + 1;
+            explanation = `At least one endpoint is Odd.<br>Formula: ((${high}-${low}) // 2) + 1 = <strong>${count}</strong>`;
+            highlightLogic('else');
+        }
+
+        document.getElementById('viz-count').innerText = count;
+        document.getElementById('viz-explanation').innerHTML = explanation;
+    }
+
+    function highlightLogic(id) {
+        // Reset classes
+        document.getElementById('card-ee').classList.remove('active');
+        document.getElementById('card-else').classList.remove('active');
+        
+        // Add active class
+        const card = document.getElementById('card-' + id);
+        if(card) card.classList.add('active');
+    }
+
+    // Initialize
+    updateViz();
+</script>
+
+</body>
+</html>
