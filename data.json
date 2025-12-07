@@ -12,7 +12,7 @@
       "Parity"
     ],
     "description": "Visualizing how modular arithmetic transforms an O(N^2) simulation into an O(1) mathematical proof."
-  }
+  },
   {
     "filename": "count_odds.html",
     "path": "solutions/count_odds.html",
